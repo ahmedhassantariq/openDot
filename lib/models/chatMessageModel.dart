@@ -5,6 +5,7 @@ class ChatMessageModel {
   final String senderID;
   final String receiverID;
   final String message;
+  final String messageType;
   final bool isEdited;
   final Timestamp timestamp;
 
@@ -13,6 +14,7 @@ class ChatMessageModel {
       this.senderID,
       this.receiverID,
       this.message,
+      this.messageType,
       this.isEdited,
       this.timestamp);
 
@@ -23,6 +25,7 @@ class ChatMessageModel {
       'senderID': senderID,
       'receiverID': receiverID,
       'message': message,
+      'messageType': messageType,
       'timestamp': timestamp,
     };
   }

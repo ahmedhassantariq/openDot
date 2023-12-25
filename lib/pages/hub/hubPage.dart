@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:reddit_app/models/hubModel.dart';
-import 'package:reddit_app/pages/rtcofWeb.dart';
+import 'package:reddit_app/pages/webRTC.dart';
 
 
 
@@ -27,7 +27,7 @@ class _HubPageState extends State<HubPage> {
       ),
       body: Column(
         children: [
-        ElevatedButton.icon(onPressed: (){Navigator.push(context, MaterialPageRoute(builder: (context)=>RtcOfWeb()));}, icon: Icon(Icons.add), label: Text("WebRTC"))
+        ElevatedButton.icon(onPressed: (){Navigator.push(context, MaterialPageRoute(builder: (context)=>WebRTCPage()));}, icon: Icon(Icons.add), label: Text("WebRTC"))
       ],),
     );
   }

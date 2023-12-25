@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:intl/intl.dart';
 import 'package:reddit_app/components/messageTextField.dart';
+import 'package:reddit_app/pages/chat/videoCall/videoCallReceive.dart';
+import 'package:reddit_app/pages/chat/videoCall/videoCallSend.dart';
+import 'package:reddit_app/pages/webRTC.dart';
 import 'package:reddit_app/services/chat/chat_services.dart';
 import 'package:reddit_app/services/posts/post_services.dart';
 
@@ -39,7 +42,7 @@ class _ChatRoomState extends State<ChatRoom> {
 
   submitMessage(){
     if(_messageEditingController.text.isNotEmpty) {
-      _chatServices.sendMessage(widget.receiverID, _messageEditingController.text).then((value) => _scrollDown());
+      _chatServices.sendMessage(widget.receiverID, _messageEditingController.text, 'text').then((value) => _scrollDown());
       _messageEditingController.clear();
     }
   }
@@ -70,7 +73,9 @@ class _ChatRoomState extends State<ChatRoom> {
           },
 
         ),
-
+        actions: [
+          IconButton(onPressed: (){Navigator.push(context, MaterialPageRoute(builder: (context)=>VideoCallSend(receiverID: widget.receiverID)));}, icon: const Icon(Icons.video_call, color: Colors.black,)),
+        ],
         centerTitle: true,
         backgroundColor: Colors.white,
       ),
@@ -130,38 +135,53 @@ class _ChatRoomState extends State<ChatRoom> {
     final time = DateFormat('hh:mm');
     final difference = DateTime.now().difference(timestamp.toDate());
 
-    return GestureDetector(
-      onLongPress: (){ (difference.inDays <= 1 && _firebaseAuth.currentUser!.uid == data['senderID']) ?
-        showCommentDeletionMenu(data['messageID']) :
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Cannot Delete Message")));
-        },
-      onDoubleTap: (){ (difference.inDays <= 1 && _firebaseAuth.currentUser!.uid == data['senderID']) ?
-      showCommentEditMenu(data['messageID'], data['message']) :
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Cannot Edit Message")));
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 3.0, horizontal: 12.0),
-        margin: const EdgeInsets.symmetric(vertical: 8.0),
-        alignment: Alignment.centerLeft,
-        child: Column (
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 5.0),
-          // difference.inHours>24
-          //     ?
-          // Align(
-          //     alignment: Alignment.center,
-          //     child: Text("${timestamp.toDate().day.toString()}/${timestamp.toDate().month}/${timestamp.toDate().year}")) : SizedBox(),
-          Text(time.format(timestamp.toDate()), style: const TextStyle(fontWeight: FontWeight.w600),),
-            Container(
-              padding: const EdgeInsets.all(4.0),
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 3.0, horizontal: 12.0),
+      margin: const EdgeInsets.symmetric(vertical: 8.0),
+      alignment: Alignment.centerLeft,
+      child: Column (
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 5.0),
+        // difference.inHours>24
+        //     ?
+        // Align(
+        //     alignment: Alignment.center,
+        //     child: Text("${timestamp.toDate().day.toString()}/${timestamp.toDate().month}/${timestamp.toDate().year}")) : SizedBox(),
+        Text(time.format(timestamp.toDate()), style: const TextStyle(fontWeight: FontWeight.w600),),
+          data['messageType']=='call' ?
+          GestureDetector(
+            onTap: (){Navigator.push(context, MaterialPageRoute(builder: (context)=>VideoCallReceive(roomID: data['message'])));},
+            child: Container(
+              padding: const EdgeInsets.all(12.0),
               decoration: BoxDecoration(
                 color: color,
                 borderRadius: const BorderRadius.all(Radius.circular(5))
               ),
-                child: Text(data['message'],softWrap: true,style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),))
-          ]),
-      ),
+                child: const Text("Video Call",softWrap: true,style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500),)),
+          )
+              :
+          GestureDetector(
+              onLongPress: (){ (difference.inDays <= 1 && _firebaseAuth.currentUser!.uid == data['senderID']) ?
+              showCommentDeletionMenu(data['messageID']) :
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Cannot Delete Message")));
+              },
+              onDoubleTap: () {
+                (difference.inDays <= 1 &&
+                    _firebaseAuth.currentUser!.uid == data['senderID']) ?
+                showCommentEditMenu(data['messageID'], data['message']) :
+                ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Cannot Edit Message")));
+              },
+            child: Container(
+                padding: const EdgeInsets.all(4.0),
+                decoration: BoxDecoration(
+                    color: color,
+                    borderRadius: const BorderRadius.all(Radius.circular(5))
+                ),
+                child: Text(data['message'],softWrap: true,style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),)),
+          )
+        ]),
     );
   }
 

@@ -100,7 +100,7 @@ class _PostCardState extends State<PostCard> {
                 const SizedBox(height: 0, width: 0)),
                 Text(widget.postModel.postDescription.toString()),
                 const SizedBox(height: 8.0),
-                PostActions(postID: widget.postModel.postID),
+                // PostActions(postID: widget.postModel.postID),
 
         ],),
           ),

@@ -1,11 +1,10 @@
 import 'dart:convert';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 
-typedef void StreamStateCallback(MediaStream stream);
+typedef StreamStateCallback = void Function(MediaStream stream);
 
-class Signaling {
+class WebRtcManager {
   Map<String, dynamic> configuration = {
     'iceServers': [
       {
@@ -24,7 +23,8 @@ class Signaling {
   String? currentRoomText;
   StreamStateCallback? onAddRemoteStream;
 
-  Future<String> createRoom(RTCVideoRenderer remoteRenderer) async {
+  Future<String> createRoom(RTCVideoRenderer localRenderer,RTCVideoRenderer remoteRenderer) async {
+    await openUserMedia(localRenderer, remoteRenderer);
     FirebaseFirestore db = FirebaseFirestore.instance;
     DocumentReference roomRef = db.collection('rooms').doc();
 
@@ -108,9 +108,10 @@ class Signaling {
     return roomId;
   }
 
-  Future<void> joinRoom(String roomId, RTCVideoRenderer remoteVideo) async {
+  Future<void> joinRoom(String roomId,RTCVideoRenderer localVideo, RTCVideoRenderer remoteVideo) async {
+    await openUserMedia(localVideo, remoteVideo);
+
     FirebaseFirestore db = FirebaseFirestore.instance;
-    print(roomId);
     DocumentReference roomRef = db.collection('rooms').doc('$roomId');
     var roomSnapshot = await roomRef.get();
     print('Got room ${roomSnapshot.exists}');
@@ -127,7 +128,7 @@ class Signaling {
 
       // Code for collecting ICE candidates below
       var calleeCandidatesCollection = roomRef.collection('calleeCandidates');
-      peerConnection!.onIceCandidate = (RTCIceCandidate? candidate) {
+      peerConnection!.onIceCandidate = (RTCIceCandidate candidate) {
         if (candidate == null) {
           print('onIceCandidate: complete!');
           return;
@@ -182,17 +183,11 @@ class Signaling {
     }
   }
 
-  Future<void> openUserMedia(
-    RTCVideoRenderer localVideo,
-    RTCVideoRenderer remoteVideo,
-  ) async {
-    var stream = await navigator.mediaDevices
-        .getUserMedia({'video': true, 'audio': false});
-
-    localVideo.srcObject = stream;
-    localStream = stream;
-
-    remoteVideo.srcObject = await createLocalMediaStream('key');
+  Future<void> openUserMedia(RTCVideoRenderer localVideo, RTCVideoRenderer remoteVideo,) async {
+    var stream = await navigator.mediaDevices.getUserMedia({'video': true, 'audio': true});
+      localVideo.srcObject = stream;
+      localStream = stream;
+      remoteVideo.srcObject = await createLocalMediaStream('key');
   }
 
   Future<void> hangUp(RTCVideoRenderer localVideo) async {
@@ -220,6 +215,27 @@ class Signaling {
 
     localStream!.dispose();
     remoteStream?.dispose();
+  }
+
+
+  void switchCamera() {
+    if (localStream != null) {
+      Helper.switchCamera(localStream!.getVideoTracks()[0]);
+    }
+  }
+
+  void switchToScreenSharing() async {
+    if (localStream != null) {
+      var stream = await navigator.mediaDevices.getDisplayMedia({'video': true, 'audio': true});
+      localStream!.getVideoTracks()[0]= stream.getVideoTracks()[0];
+    }
+  }
+
+  void muteMic() {
+    if (localStream != null) {
+      bool enabled = localStream!.getAudioTracks()[0].enabled;
+      localStream!.getAudioTracks()[0].enabled = !enabled;
+    }
   }
 
   void registerPeerConnectionListeners() {

@@ -55,11 +55,11 @@ class ChatServices extends ChangeNotifier{
     await _firestore.collection('users').doc(_firebaseAuth.currentUser!.uid).collection("chats").doc(userID).delete();
   }
 
-  Future<void> sendMessage(String receiverID, String message) async{
+  Future<void> sendMessage(String receiverID, String message, String messageType) async{
     final String currentUserID = _firebaseAuth.currentUser!.uid;
     String docID =  _firestore.collection("users").doc(currentUserID).collection("chats").doc(receiverID).collection("messages").doc().id;
 
-    ChatMessageModel messageModel = ChatMessageModel(docID,currentUserID, receiverID, message, false, Timestamp.now());
+    ChatMessageModel messageModel = ChatMessageModel(docID,currentUserID, receiverID, message, messageType , false, Timestamp.now());
     DocumentReference senderDoc = _firestore.collection("users").doc(currentUserID).collection("chats").doc(receiverID);
     DocumentReference receiverDoc = _firestore.collection("users").doc(receiverID).collection("chats").doc(currentUserID);
 

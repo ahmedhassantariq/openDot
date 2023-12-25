@@ -13,7 +13,7 @@ class WebRTCPage extends StatefulWidget {
 }
 
 class _WebRTCPageState extends State<WebRTCPage> {
-  Signaling signaling = Signaling();
+  WebRtcManager signaling = WebRtcManager();
   RTCVideoRenderer _localRenderer = RTCVideoRenderer();
   RTCVideoRenderer _remoteRenderer = RTCVideoRenderer();
   String? roomId;
@@ -36,51 +36,46 @@ class _WebRTCPageState extends State<WebRTCPage> {
   void dispose() {
     _localRenderer.dispose();
     _remoteRenderer.dispose();
+    signaling.hangUp(_localRenderer);
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: Column(
+    return MaterialApp(
+      home: Scaffold(
+        appBar: AppBar(
+          leading: IconButton(onPressed: (){Navigator.pop(context);}, icon: const Icon(Icons.arrow_back)),
+        ),
+        body: Column(
           children: <Widget>[
             MyTextField(controller: textEditingController, hintText: 'RoomID', obscureText: false,),
             SizedBox(height: 8),
-            Row(
+            Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 ElevatedButton(
                   onPressed: () {
                     signaling.openUserMedia(_localRenderer, _remoteRenderer);
                   },
-                  child: Text("Open camera & microphone"),
-                ),
-                SizedBox(
-                  width: 8,
+                  child: Text("Open"),
                 ),
                 ElevatedButton(
                   onPressed: () async {
-                    roomId = await signaling.createRoom(_remoteRenderer);
+                    roomId = await signaling.createRoom(_localRenderer,_remoteRenderer);
                     textEditingController.text = roomId!;
                     setState(() {});
                   },
-                  child: Text("Create room"),
-                ),
-                SizedBox(
-                  width: 8,
+                  child: Text("Create"),
                 ),
                 ElevatedButton(
                   onPressed: () {
                     // Add roomId
                     signaling.joinRoom(
-                      textEditingController.text.trim(),
-                      _remoteRenderer,
+                      textEditingController.text.trim(),_localRenderer,_remoteRenderer
                     );
                   },
                   child: Text("Join room"),
-                ),
-                SizedBox(
-                  width: 8,
                 ),
                 ElevatedButton(
                   onPressed: () {
@@ -91,12 +86,10 @@ class _WebRTCPageState extends State<WebRTCPage> {
               ],
             ),
             SizedBox(height: 8),
-            SizedBox(
-              height: 100,
-              width: 100,
+            Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: Row(
+                child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Expanded(child: RTCVideoView(_localRenderer, mirror: true)),
@@ -105,22 +98,10 @@ class _WebRTCPageState extends State<WebRTCPage> {
                 ),
               ),
             ),
-            // Padding(
-            //   padding: const EdgeInsets.all(8.0),
-            //   child: Row(
-            //     mainAxisAlignment: MainAxisAlignment.center,
-            //     children: [
-            //       Text("Join the following Room: "),
-            //       Flexible(
-            //         child: TextFormField(
-            //           controller: textEditingController,
-            //         ),
-            //       )
-            //     ],
-            //   ),
-            // ),
+
             SizedBox(height: 8)
           ],
+        ),
       ),
     );
   }

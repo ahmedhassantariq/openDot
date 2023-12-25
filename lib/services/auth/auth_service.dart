@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:reddit_app/services/firebase/firebase_services.dart';
 class AuthService extends ChangeNotifier {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -26,6 +27,9 @@ class AuthService extends ChangeNotifier {
   }
 
   Future<UserCredential> signUpWithEmailAndPassword(String email, password) async {
+    String fcmToken = "";
+
+    await FirebaseServices().getFcmToken().then((value) => fcmToken = value);
     try{
       UserCredential userCredential = await _firebaseAuth.createUserWithEmailAndPassword(email: email, password: password);
       _firestore.collection('users').doc(userCredential.user!.uid).set({
@@ -35,6 +39,7 @@ class AuthService extends ChangeNotifier {
         'photoUrl':"https://upload.wikimedia.org/wikipedia/commons/0/0e/Basic_red_dot.png",
         'displayName':"NewUser",
         'phoneNumber':"0123456789",
+        'fcmToken': fcmToken,
         'emailVerified':userCredential.user!.emailVerified,
         'isAnonymous':userCredential.user!.isAnonymous,
         'lastLogin': Timestamp.now(),
@@ -55,23 +60,26 @@ class AuthService extends ChangeNotifier {
       accessToken: gAuth.accessToken,
       idToken: gAuth.idToken,
     );
-    // try {
-    //   UserCredential userCredential = await _firebaseAuth.signInWithPopup(_googleAuthProvider);
-    //   _firestore.collection('users').doc(userCredential.user!.uid).set({
-    //     'uid': userCredential.user!.uid,
-    //     'userName':"stickOctopus",
-    //     'email': userCredential.user!.email,
-    //     'photoUrl':userCredential.user!.photoURL,
-    //     'displayName':userCredential.user!.displayName,
-    //     'phoneNumber':userCredential.user!.phoneNumber,
-    //     'emailVerified':userCredential.user!.emailVerified,
-    //     'isAnonymous':userCredential.user!.isAnonymous,
-    //     'lastLogin': Timestamp.now(),
-    //   }, SetOptions(merge: true));
-    //   return userCredential;
-    // } on FirebaseAuthException catch(e){
-    //   throw Exception(e.code);
-    // }
+    String fcmToken = "";
+    await FirebaseServices().getFcmToken().then((value) => fcmToken = value);
+    try {
+      UserCredential userCredential = await _firebaseAuth.signInWithPopup(_googleAuthProvider);
+      _firestore.collection('users').doc(userCredential.user!.uid).set({
+        'uid': userCredential.user!.uid,
+        'userName':"stickOctopus",
+        'email': userCredential.user!.email,
+        'photoUrl':userCredential.user!.photoURL,
+        'displayName':userCredential.user!.displayName,
+        'phoneNumber':userCredential.user!.phoneNumber,
+        'emailVerified':userCredential.user!.emailVerified,
+        'fcmToken': fcmToken,
+        'isAnonymous':userCredential.user!.isAnonymous,
+        'lastLogin': Timestamp.now(),
+      }, SetOptions(merge: true));
+      return userCredential;
+    } on FirebaseAuthException catch(e){
+      throw Exception(e.code);
+    }
     return await FirebaseAuth.instance.signInWithCredential(credential);
   }
 
