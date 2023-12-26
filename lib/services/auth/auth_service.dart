@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:reddit_app/services/firebase/firebase_services.dart';
+import 'package:reddit_app/services/notifications/notification_services.dart';
 class AuthService extends ChangeNotifier {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -29,7 +30,7 @@ class AuthService extends ChangeNotifier {
   Future<UserCredential> signUpWithEmailAndPassword(String email, password) async {
     String fcmToken = "";
 
-    await FirebaseServices().getFcmToken().then((value) => fcmToken = value);
+    await NotificationServices().getDeviceToken().then((value) => fcmToken = value);
     try{
       UserCredential userCredential = await _firebaseAuth.createUserWithEmailAndPassword(email: email, password: password);
       _firestore.collection('users').doc(userCredential.user!.uid).set({
@@ -61,7 +62,7 @@ class AuthService extends ChangeNotifier {
       idToken: gAuth.idToken,
     );
     String fcmToken = "";
-    await FirebaseServices().getFcmToken().then((value) => fcmToken = value);
+    await NotificationServices().getDeviceToken().then((value) => fcmToken = value);
     try {
       UserCredential userCredential = await _firebaseAuth.signInWithPopup(_googleAuthProvider);
       _firestore.collection('users').doc(userCredential.user!.uid).set({

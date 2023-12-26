@@ -1,11 +1,10 @@
 import 'dart:async';
-import 'dart:js';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:reddit_app/pages/webRTC.dart';
+
+import '../notifications/notification_services.dart';
 
 class FirebaseServices extends ChangeNotifier {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
@@ -20,32 +19,14 @@ class FirebaseServices extends ChangeNotifier {
     return url;
   }
 
-
-  Future<String> getFcmToken() async {
-    final notificationSettings = await FirebaseMessaging.instance.requestPermission();
-    final fcmToken = await FirebaseMessaging.instance.getToken();
-    return fcmToken.toString();
-  }
-
-  void handMessage(RemoteMessage? message) async{
-    if(message==null){
-      return;
+  Future<void> saveDeviceToken(String fcmToken) async {
+    try{
+      _firestore.collection('users').doc(_firebaseAuth.currentUser!.uid).update({
+        'fcmToken': fcmToken,
+      });
+    } on FirebaseAuthException catch(e){
+      throw Exception(e.code);
     }
-    print(message.notification!.title);
-    print(message.notification!.body);
-    print(message.data['keyValue']);
-    print("----------------------------------------");
   }
-
-
-
-  Future initNotifications(BuildContext context) async {
-    FirebaseMessaging.instance.setDeliveryMetricsExportToBigQuery(true);
-    // FirebaseMessaging.instance.getInitialMessage().then(handMessage);
-    FirebaseMessaging.onMessageOpenedApp.listen(handMessage);
-
-  }
-
-
 
 }

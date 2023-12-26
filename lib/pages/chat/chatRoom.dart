@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -6,9 +8,10 @@ import 'package:intl/intl.dart';
 import 'package:reddit_app/components/messageTextField.dart';
 import 'package:reddit_app/pages/chat/videoCall/videoCallReceive.dart';
 import 'package:reddit_app/pages/chat/videoCall/videoCallSend.dart';
-import 'package:reddit_app/pages/webRTC.dart';
 import 'package:reddit_app/services/chat/chat_services.dart';
+import 'package:reddit_app/services/notifications/notification_services.dart';
 import 'package:reddit_app/services/posts/post_services.dart';
+import 'package:http/http.dart' as http;
 
 class ChatRoom extends StatefulWidget {
   final String receiverID;
@@ -27,7 +30,7 @@ class _ChatRoomState extends State<ChatRoom> {
   final TextEditingController _messageEditingController = TextEditingController();
   final ScrollController _controller = ScrollController();
   final FocusNode focusNode = FocusNode();
-
+  final NotificationServices notificationServices = NotificationServices();
 
   @override
   void initState() {
@@ -74,6 +77,30 @@ class _ChatRoomState extends State<ChatRoom> {
 
         ),
         actions: [
+          IconButton(onPressed: (){
+            notificationServices.getDeviceToken().then((value)async {
+              print(value.toString());
+              var data = {
+                'to' : value.toString(),
+                'priority': 'high',
+                'notification': {
+                  'title':'Ahmed',
+                  'body':'Hello',
+                },
+                'data' : {
+                  'type': 'chat',
+                  'id': '1'
+                }
+              };
+              await http.post(Uri.parse("https://fcm.googleapis.com/fcm/send"),
+              body: jsonEncode(data),
+                headers: {
+                'Content-Type' : 'application/json',
+                  'Authorization' :'Key=AAAAX29LRcw:APA91bHMZGtk79tLwypFQmtKdaiwB2wHz-V7CDpO5lkbnzX1Zgnuc05gHBXGuA3267PKvx-2eFRdoIRcTj9kMEA6hzH8_yTeTPMyED8H376K0fOmO0pQy7VEK2Us1RM_CzNbXcmNXunl'
+                }
+              );
+            });
+          }, icon: Icon(Icons.notifications, color: Colors.black,)),
           IconButton(onPressed: (){Navigator.push(context, MaterialPageRoute(builder: (context)=>VideoCallSend(receiverID: widget.receiverID)));}, icon: const Icon(Icons.video_call, color: Colors.black,)),
         ],
         centerTitle: true,

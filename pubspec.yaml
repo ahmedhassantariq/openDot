@@ -53,6 +53,7 @@ dependencies:
   shimmer: ^3.0.0
   shimmer_container: ^0.0.2
   flutter_webrtc: ^0.9.47
+  app_settings: ^5.1.1
 
 dev_dependencies:
   flutter_test:

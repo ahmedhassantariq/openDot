@@ -226,8 +226,9 @@ class WebRtcManager {
 
   void switchToScreenSharing() async {
     if (localStream != null) {
-      var stream = await navigator.mediaDevices.getDisplayMedia({'video': true, 'audio': true});
-      localStream!.getVideoTracks()[0]= stream.getVideoTracks()[0];
+      print("called");
+      // var stream = await navigator.mediaDevices.getDisplayMedia({'video': true, 'audio': true});
+      localStream!.getVideoTracks()[0]= remoteStream!.getVideoTracks()[0];
     }
   }
 

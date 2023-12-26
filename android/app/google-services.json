@@ -7,6 +7,42 @@
   "client": [
     {
       "client_info": {
+        "mobilesdk_app_id": "1:409889097164:android:018796123e8b62c16bc969",
+        "android_client_info": {
+          "package_name": "com.codina.opendot"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "409889097164-f0j23ih54gjpvad3q4jrjjvgl44fl1lf.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC3aPQIKJwpW3LGmtoFu2GRX8yNy2toXLk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "409889097164-f0j23ih54gjpvad3q4jrjjvgl44fl1lf.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "409889097164-n5gjkohj0kh010u6alq5au47o36epoa2.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.redditApp.RunnerTests"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:409889097164:android:21b992ac858d83826bc969",
         "android_client_info": {
           "package_name": "com.example.reddit_app"

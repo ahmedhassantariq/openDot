@@ -19,13 +19,20 @@ import 'package:reddit_app/services/posts/post_services.dart';
 void main() async{
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   runApp(
       ChangeNotifierProvider(create: (context) => AuthService(),
         child: const MyApp(),
       )
   );
 }
+
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async{
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  print(message.notification!.title.toString());
+}
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 

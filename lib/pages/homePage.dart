@@ -3,6 +3,7 @@ import 'package:hexcolor/hexcolor.dart';
 
 import 'package:reddit_app/pages/drawer/endDrawer.dart';
 import 'package:reddit_app/pages/scrollView.dart';
+import 'package:reddit_app/services/notifications/notification_services.dart';
 
 import '../services/firebase/firebase_services.dart';
 import 'chat/chatPage.dart';
@@ -19,6 +20,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final NotificationServices notificationServices = NotificationServices();
   final FirebaseServices _postServices = FirebaseServices();
   int currentIndex = 0;
   onTapped(int index){
@@ -39,10 +41,20 @@ class _HomePageState extends State<HomePage> {
     const Inbox(),
   ];
 
+  @override
+  void initState() {
+    notificationServices.requestNotificationPermission();
+    notificationServices.firebaseInit(context);
+    notificationServices.setupInteractMessage(context);
+    // notificationServices.isTokenRefresh();
+    notificationServices.getDeviceToken();
+    // TODO: implement initState
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
-    _postServices.initNotifications();
+    // _postServices.initNotifications();
 
     return Scaffold(
      appBar: _appBar(),
