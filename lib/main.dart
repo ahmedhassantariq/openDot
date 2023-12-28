@@ -7,7 +7,10 @@ import 'package:reddit_app/services/auth/auth_service.dart';
 import 'package:reddit_app/services/chat/chat_services.dart';
 import 'package:reddit_app/services/firebase/firebase_options.dart';
 import 'package:reddit_app/services/firebase/firebase_services.dart';
+import 'package:reddit_app/services/notifications/notification_services.dart';
 import 'package:reddit_app/services/posts/post_services.dart';
+
+import 'services/firebase/firebase_options.dart';
 
 
 // -d chrome --web-renderer html
@@ -30,7 +33,6 @@ void main() async{
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async{
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  print(message.notification!.title.toString());
 }
 
 class MyApp extends StatelessWidget {

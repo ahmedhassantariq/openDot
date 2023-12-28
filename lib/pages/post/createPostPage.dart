@@ -8,8 +8,6 @@ import 'package:provider/provider.dart';
 import 'package:reddit_app/services/posts/post_services.dart';
 
 import '../../components/postTextfield.dart';
-import '../../services/firebase/firebase_services.dart';
-
 class CreatePostPage extends StatefulWidget {
   const CreatePostPage({super.key});
 
@@ -95,7 +93,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
             ],
           ),
         ),
-        isUploading ? LinearProgressIndicator() : SizedBox(width:0,height: 0,),
+        isUploading ? const LinearProgressIndicator() : const SizedBox(width:0,height: 0,),
         Container(
           height: 56,
           color: Colors.white,

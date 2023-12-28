@@ -1,16 +1,18 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
-import 'package:reddit_app/components/myTextfield.dart';
-import 'package:reddit_app/services/chat/chat_services.dart';
+import 'package:reddit_app/models/userDataModel.dart';
+import 'package:reddit_app/services/notifications/notification_services.dart';
 
-import '../../../services/signaling.dart';
+import '../../../models/notificationsModel.dart';
+import '../../../services/chat/signaling.dart';
 
 
 class VideoCallSend extends StatefulWidget {
-  final String receiverID;
+  final UserCredentialsModel receiver;
   const VideoCallSend({
-    required this.receiverID,
+    required this.receiver,
     super.key,
   });
   @override
@@ -20,12 +22,22 @@ class VideoCallSend extends StatefulWidget {
 class _VideoCallSendState extends State<VideoCallSend> {
   WebRtcManager signaling = WebRtcManager();
   RTCVideoRenderer _localRenderer = RTCVideoRenderer();
-  RTCVideoRenderer _remoteRenderer = RTCVideoRenderer();
+  final RTCVideoRenderer _remoteRenderer = RTCVideoRenderer();
   String? roomId;
 
   sendMessage(String roomID) {
     if(roomId!=null) {
-      ChatServices().sendMessage(widget.receiverID, roomID, "call");
+      NotificationServices().sendNotification(
+          NotificationsModel(
+              to: widget.receiver.uid,
+              priority: 'high',
+              title: 'Call',
+              body: "Calling",
+              type: 'call',
+              id: '1',
+              payload: roomID
+          )
+      );
     }
   }
 
@@ -64,8 +76,11 @@ class _VideoCallSendState extends State<VideoCallSend> {
           backgroundColor: Colors.white,
           leading: IconButton(onPressed: (){Navigator.pop(context);signaling.hangUp(_localRenderer);}, icon: const Icon(Icons.arrow_back, color: Colors.black,)),
           actions: [
-            IconButton(onPressed: (){signaling?.switchToScreenSharing();}, icon: const Icon(Icons.screen_share, color: Colors.black,)),
+            defaultTargetPlatform == TargetPlatform.android
+                ?
             IconButton(onPressed: (){signaling?.switchCamera();}, icon: const Icon(Icons.switch_camera, color: Colors.black,))
+                :
+            const SizedBox()
           ],
         ),
         bottomNavigationBar: BottomAppBar(
@@ -97,8 +112,6 @@ class _VideoCallSendState extends State<VideoCallSend> {
                 ),
               ),
             ),
-
-            SizedBox(height: 8)
           ],
         ),
       ),

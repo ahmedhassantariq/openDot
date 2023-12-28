@@ -1,15 +1,23 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:reddit_app/components/myTextfield.dart';
+import 'package:reddit_app/models/userDataModel.dart';
 
-import '../../../services/signaling.dart';
+import '../../../services/notifications/notification_response.dart';
+import '../../../services/chat/signaling.dart';
 
 
 class VideoCallReceive extends StatefulWidget {
-  final String roomID;
+  final UserCredentialsModel receiver;
+  final RemoteMessage message;
+  final bool isVideo;
   const VideoCallReceive({
-    required this.roomID,
+    required this.receiver,
+    required this.message,
+    required this.isVideo,
     super.key,
   });
 
@@ -19,8 +27,8 @@ class VideoCallReceive extends StatefulWidget {
 
 class _VideoCallReceiveState extends State<VideoCallReceive> {
   WebRtcManager signaling = WebRtcManager();
-  RTCVideoRenderer _localRenderer = RTCVideoRenderer();
-  RTCVideoRenderer _remoteRenderer = RTCVideoRenderer();
+  final RTCVideoRenderer _localRenderer = RTCVideoRenderer();
+  final RTCVideoRenderer _remoteRenderer = RTCVideoRenderer();
 
   @override
   void initState() {
@@ -30,7 +38,8 @@ class _VideoCallReceiveState extends State<VideoCallReceive> {
       _remoteRenderer.srcObject = stream;
       setState(() {});
     });
-    signaling.joinRoom(widget.roomID, _localRenderer, _remoteRenderer);
+      signaling.joinRoom(widget.message.data['payload'], _localRenderer, _remoteRenderer, widget.isVideo);
+
     super.initState();
   }
 
@@ -50,8 +59,11 @@ class _VideoCallReceiveState extends State<VideoCallReceive> {
           backgroundColor: Colors.white,
           leading: IconButton(onPressed: (){Navigator.pop(context);signaling.hangUp(_localRenderer);}, icon: const Icon(Icons.arrow_back, color: Colors.black,)),
           actions: [
-            IconButton(onPressed: (){signaling?.switchToScreenSharing();}, icon: const Icon(Icons.screen_share, color: Colors.black,)),
+            defaultTargetPlatform == TargetPlatform.android
+                ?
             IconButton(onPressed: (){signaling?.switchCamera();}, icon: const Icon(Icons.switch_camera, color: Colors.black,))
+                :
+            const SizedBox()
           ],
         ),
         bottomNavigationBar: BottomAppBar(

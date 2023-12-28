@@ -56,10 +56,10 @@ class _ChatPageState extends State<ChatPage> {
         }
         return ListTile(
 
-          leading: Image.network(snapshot.data!.imageUrl),
+          leading: CircleAvatar(backgroundImage: NetworkImage(snapshot.data!.imageUrl),),
           minVerticalPadding: 20,
           title: Text(snapshot.data!.userName, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),),
-          onTap: (){Navigator.push(context, MaterialPageRoute(builder: (context)=> ChatRoom(receiverID: document.id)));},
+          onTap: (){Navigator.push(context, MaterialPageRoute(builder: (context)=> ChatRoom(receiver: snapshot.requireData)));},
           onLongPress: (){showChatDeletionMenu(document.id);},
         );
       }

@@ -114,11 +114,15 @@ class _ProfilePageState extends State<ProfilePage>{
                        )
                    ),
                   StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-
                     stream: postStream,
                     builder: (context, snapshot) {
                       if (snapshot.hasData) {
-                        return ListView.builder(
+                        return GridView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 3,
+                            crossAxisSpacing: 8.0
+                          ),
                           shrinkWrap: true,
                           scrollDirection: Axis.vertical,
                           itemCount: snapshot.data!.docs.length,
@@ -132,10 +136,11 @@ class _ProfilePageState extends State<ProfilePage>{
                                 imageUrl: snapshot.data!.docs[index].get('imageUrl'),
                                 upVotes: snapshot.data!.docs[index].get('upVotes'),
                                 downVotes: snapshot.data!.docs[index].get('downVotes'));
-                            return PostCard(
-                              postModel: postModel,
-                              currentUser: _firebaseAuth,
-                            );
+                            return postModel.imageUrl.isNotEmpty
+                                ?
+                            Image.network(postModel.imageUrl.first)
+                                :
+                            const SizedBox();
                           },
                         );
                       }

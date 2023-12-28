@@ -1,19 +1,25 @@
-import 'dart:io';
+import 'dart:convert';
 import 'dart:math';
 
+import 'package:awesome_notifications/awesome_notifications.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:provider/provider.dart';
-import 'package:reddit_app/pages/webRTC.dart';
+import 'package:reddit_app/models/notificationsModel.dart';
+import 'package:reddit_app/pages/chat/chatRoom.dart';
 import 'package:reddit_app/services/firebase/firebase_services.dart';
-
+import 'package:http/http.dart' as http;
+import 'package:reddit_app/services/notifications/notificationContents.dart';
+import 'package:reddit_app/services/notifications/notificationsController.dart';
+import 'package:reddit_app/services/posts/post_services.dart';
 class NotificationServices {
   FirebaseMessaging messaging = FirebaseMessaging.instance;
   final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-
+  final AwesomeNotifications _awesomeNotifications = AwesomeNotifications();
+  final NotificationContents notificationContents = NotificationContents();
   void requestNotificationPermission() async{
     NotificationSettings settings = await messaging.requestPermission(
       alert: true,
@@ -36,6 +42,62 @@ class NotificationServices {
     }
   }
 
+  void initAwesomeNotifications() async{
+    _awesomeNotifications.initialize(null, [
+      NotificationChannel(
+          channelKey: 'channel',
+          channelName: 'channel of calling',
+          channelDescription: 'channel description',
+        defaultColor: Colors.red,
+        ledColor: Colors.white,
+        importance: NotificationImportance.Max,
+        channelShowBadge: true,
+        locked: true,
+        defaultRingtoneType: DefaultRingtoneType.Ringtone,
+      ),
+    ]);
+
+
+  }
+
+  void handleAwesomeBackgroundNotifications(RemoteMessage message) async {
+    initAwesomeNotifications();
+    if(message.data['type'] == 'chat'){
+      _awesomeNotifications.createNotification(content: notificationContents.messageNotification(message),);
+    }
+  }
+  
+  void handleAwesomeNotification(BuildContext context, RemoteMessage message) async{
+    initAwesomeNotifications();
+    _awesomeNotifications.setListeners(
+      onActionReceivedMethod: (ReceivedAction receivedAction) async {
+        NotificationController.onActionReceivedMethod(context, receivedAction, message);
+      },
+      onNotificationCreatedMethod: (ReceivedNotification receivedNotification) async {
+        NotificationController.onNotificationCreatedMethod(context, receivedNotification);
+      },
+      onNotificationDisplayedMethod: (ReceivedNotification receivedNotification) async {
+        NotificationController.onNotificationDisplayedMethod(context, receivedNotification);
+      },
+      onDismissActionReceivedMethod: (ReceivedAction receivedAction) async {
+        NotificationController.onDismissActionReceivedMethod(context, receivedAction, message);
+      },
+    );
+    if(message.data['type'] == 'chat'){
+      _awesomeNotifications.createNotification(content: notificationContents.messageNotification(message),);
+    }
+    if(message.data['type'] == 'call'){
+      _awesomeNotifications.createNotification(content: notificationContents.callNotification(message),
+        actionButtons: [
+          NotificationActionButton(key: 'accept', label: 'Accept'),
+          NotificationActionButton(key: 'dismiss', label: 'Dismiss'),
+        ]
+      );
+    }
+
+  }
+
+
   void initLocalNotifications(BuildContext context, RemoteMessage message){
     var androidInitialization = const AndroidInitializationSettings('@mipmap/ic_launcher');
     var iosInitialization = const DarwinInitializationSettings();
@@ -54,17 +116,10 @@ class NotificationServices {
 
   void firebaseInit(BuildContext context) {
     FirebaseMessaging.onMessage.listen((message) {
-      if(kDebugMode) {
-        print(message.notification!.title.toString());
-        print(message.notification!.body.toString());
-        print(message.data['type']);
-        print(message.data['id']);
-      }
-
       if(defaultTargetPlatform == TargetPlatform.android){
-        initLocalNotifications(context, message);
-        showNotifications(message);
-
+        // initLocalNotifications(context, message);
+        // showNotifications(message);
+        handleAwesomeNotification(context, message);
       } else if(kIsWeb) {
         showWebNotifications(context,message);
       }
@@ -72,10 +127,7 @@ class NotificationServices {
   }
 
   Future<void> showWebNotifications(BuildContext context,RemoteMessage message) async{
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(
-          "${message.notification!.title.toString()}: ${message.notification!.body.toString()}"
-        )));
+    NotificationController().webNotificationMethod(context, message);
   }
   Future<void> showNotifications(RemoteMessage message) async{
 
@@ -129,19 +181,64 @@ class NotificationServices {
     //when app is terminated
     RemoteMessage? initialMessage = await FirebaseMessaging.instance.getInitialMessage();
     if(initialMessage!=null){
-      handleMessage(context, initialMessage);
+      // handleMessage(context, initialMessage);
     }
 
     //when app is in background
     FirebaseMessaging.onMessageOpenedApp.listen((message) {
-      handleMessage(context, message);
+      // handleMessage(context, message);
+      handleAwesomeNotification(context, message);
     });
 
   }
 
-  void handleMessage(BuildContext context, RemoteMessage message) {
+  Future<void> handleMessage(BuildContext context, RemoteMessage message) async {
     if(message.data['type']=='chat'){
-      Navigator.push(context, MaterialPageRoute(builder: (context)=>WebRTCPage()));
+            Navigator.push(
+          context, MaterialPageRoute(
+          builder: (context) => FutureBuilder(
+            future: PostServices().getUser(message.data['sender'].toString()),
+            builder: (context, snapshot) {
+              if(snapshot.connectionState==ConnectionState.waiting){
+                return const Text("Loading");
+              }
+              if(snapshot.hasError){
+                return const Text("Error Loading Message");
+              }
+              return ChatRoom(receiver: snapshot.requireData);
+            },)));
     }
   }
+
+  void sendNotification(NotificationsModel notification) async {
+    FirebaseServices().getTokenFromUser(notification.to).then((fcmToken) async{
+      print(fcmToken.toString());
+  var data =
+  {
+    'to' : fcmToken.toString(),
+    'priority': notification.priority,
+    'notification':
+    {
+      'title': notification.title,
+      'body': notification.body,
+    },
+    'data' :
+    {
+      'type': notification.type,
+      'id': notification.id,
+      'sender': FirebaseAuth.instance.currentUser!.uid,
+      'payload': notification.payload
+    }
+  };
+  await http.post(Uri.parse("https://fcm.googleapis.com/fcm/send"),
+  body: jsonEncode(data),
+  headers: {
+  'Content-Type' : 'application/json',
+  'Authorization' :'Key=AAAAX29LRcw:APA91bHMZGtk79tLwypFQmtKdaiwB2wHz-V7CDpO5lkbnzX1Zgnuc05gHBXGuA3267PKvx-2eFRdoIRcTj9kMEA6hzH8_yTeTPMyED8H376K0fOmO0pQy7VEK2Us1RM_CzNbXcmNXunl'
+  });});
+  }
+
+
+
+
 }

@@ -17,11 +17,9 @@ import '../../components/postActions.dart';
 
 class PostCard extends StatefulWidget {
   final PostModel postModel;
-  final FirebaseAuth currentUser;
   const PostCard({
     super.key,
     required this.postModel,
-    required this.currentUser,
   });
 
   @override
@@ -30,7 +28,7 @@ class PostCard extends StatefulWidget {
 
 class _PostCardState extends State<PostCard> {
   final PostServices _postServices = PostServices();
-
+  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
 
   @override
   Widget build(BuildContext context) {
@@ -48,8 +46,6 @@ class _PostCardState extends State<PostCard> {
           Navigator.push(context, MaterialPageRoute(
             builder: (context)=> PostView(
               postModel: widget.postModel,
-              currentUser: widget.currentUser,
-              snapshot: snapshot.data,
 
         )));},
         child: Card(
@@ -123,7 +119,7 @@ class _PostCardState extends State<PostCard> {
               Expanded(
                 child: ListView(
                   children: [
-                    widget.postModel.uploadedBy==widget.currentUser.currentUser!.uid ?
+                    widget.postModel.uploadedBy==_firebaseAuth.currentUser!.uid ?
                     TextButton.icon(
                       style: TextButton.styleFrom(alignment: Alignment.centerLeft,padding: const EdgeInsets.symmetric(vertical: 15.0)),
                       icon: const Icon(Icons.delete_outline, color: Colors.black,),
@@ -137,7 +133,7 @@ class _PostCardState extends State<PostCard> {
                         child: const Text("Delete Post", style: TextStyle(color: Colors.black, fontWeight: FontWeight.w600)),
                       ),
                     ) : const SizedBox(height: 0,width: 0),
-                    widget.postModel.uploadedBy==widget.currentUser.currentUser!.uid ?
+                    widget.postModel.uploadedBy==_firebaseAuth.currentUser!.uid ?
                     TextButton.icon(
                       style: TextButton.styleFrom(alignment: Alignment.centerLeft,padding: const EdgeInsets.symmetric(vertical: 15.0)),
                       icon: const Icon(Icons.update_outlined, color: Colors.black,),

@@ -99,7 +99,7 @@ class _BottomProfileModalState extends State<BottomProfileModal> {
                           Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) => ChatRoom(receiverID: widget.uploadedBy,)));
+                                  builder: (context) => ChatRoom(receiver: snapshot.requireData,)));
                         });
                       },
                       child: Container(

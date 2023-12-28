@@ -15,7 +15,6 @@ class FrontDrawer extends StatefulWidget {
 }
 
 class _FrontDrawerState extends State<FrontDrawer> {
-  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final HubServices _hubServices = HubServices();
 
   Route _createRoute(Widget page) {

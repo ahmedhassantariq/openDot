@@ -35,8 +35,8 @@ class PostTextField extends StatelessWidget {
         filled: false,
         hintText: hintText,
         hintStyle: TextStyle(color: Colors.grey, fontSize: fontSize, fontWeight: fontWeight, letterSpacing: 2),
-
       ) ,
+      cursorColor: Colors.grey,
     );
   }
 }

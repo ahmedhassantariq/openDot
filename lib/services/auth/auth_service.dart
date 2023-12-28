@@ -103,5 +103,46 @@ class AuthService extends ChangeNotifier {
 
 
 
+  Future<void> updateUserName(String userName) async{
+    try {
+      _firestore.collection('users').doc(_firebaseAuth.currentUser!.uid).update({
+        'userName': userName,
+      });
+    } on FirebaseAuthException catch(e){
+      throw Exception(e.code);
+    }
+  }
+
+  Future<void> updateDisplayName(String displayName) async{
+    try {
+      _firestore.collection('users').doc(_firebaseAuth.currentUser!.uid).update({
+        'userName': displayName,
+      });
+    } on FirebaseAuthException catch(e){
+      throw Exception(e.code);
+    }
+  }
+
+  Future<void> updatePhoneNumber(String phoneNumber) async{
+    try {
+      _firestore.collection('users').doc(_firebaseAuth.currentUser!.uid).update({
+        'phoneNumber': phoneNumber,
+      });
+    } on FirebaseAuthException catch(e){
+      throw Exception(e.code);
+    }
+  }
+
+  Future<void> updateDisplayPhoto(String photoUrl) async{
+    try {
+      _firestore.collection('users').doc(_firebaseAuth.currentUser!.uid).update({
+        'photoUrl': photoUrl,
+      });
+    } on FirebaseAuthException catch(e){
+      throw Exception(e.code);
+    }
+    notifyListeners();
+  }
+
 
 }

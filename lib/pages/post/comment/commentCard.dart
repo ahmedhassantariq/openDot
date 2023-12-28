@@ -1,35 +1,16 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:reddit_app/components/commentActions.dart';
+import 'package:reddit_app/models/commentModel.dart';
 import 'package:reddit_app/services/posts/post_services.dart';
-import 'package:shimmer/shimmer.dart';
-import 'package:shimmer_container/shimmer_container.dart';
-
-import '../../../services/firebase/firebase_services.dart';
 import '../../profile/bottomProfileModal.dart';
 
 class CommentCard extends StatefulWidget {
-  final String postID;
-  final String commentID;
-  final String comment;
-  final String uploadedBy;
-  final Timestamp uploadedOn;
-  final int upVotes;
-  final int downVotes;
-  final FirebaseAuth currentUser;
+  final CommentModel commentModel;
 
-  const CommentCard(
-      {required this.postID,
-      required this.commentID,
-      required this.comment,
-      required this.uploadedBy,
-      required this.uploadedOn,
-      required this.upVotes,
-      required this.downVotes,
-      required this.currentUser,
-      super.key});
+  const CommentCard({
+    required this.commentModel,
+    super.key
+  });
 
   @override
   State<CommentCard> createState() => _CommentCardState();
@@ -40,7 +21,7 @@ class _CommentCardState extends State<CommentCard> {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-      future: _postServices.getUser(widget.uploadedBy),
+      future: _postServices.getUser(widget.commentModel.uploadedBy),
       builder: (context, snapshot) {
         if(snapshot.hasError){
           return const Text("Error Loading Comment");
@@ -78,7 +59,7 @@ class _CommentCardState extends State<CommentCard> {
                           ),
                           const SizedBox(width: 8.0),
                           Text(
-                            ("${DateTime.now().difference(widget.uploadedOn.toDate()).inHours}h"),
+                            ("${DateTime.now().difference(widget.commentModel.uploadedOn.toDate()).inHours}h"),
                             style: const TextStyle(
                                 fontWeight: FontWeight.w300, fontSize: 12),
                           ),
@@ -95,7 +76,7 @@ class _CommentCardState extends State<CommentCard> {
                     ),
                   ),
                   const SizedBox(height: 8.0),
-                  Text(widget.comment),
+                  Text(widget.commentModel.comment),
                   const SizedBox(height: 8.0),
                   // CommentActions(
                   //     postID: widget.postID,
@@ -123,7 +104,7 @@ class _CommentCardState extends State<CommentCard> {
               Expanded(
                   child: ListView(
                 children: [
-                  widget.uploadedBy == widget.currentUser.currentUser!.uid
+                  widget.commentModel.uploadedBy == widget.commentModel.currentUser!.uid
                       ? TextButton.icon(
                           style: TextButton.styleFrom(
                               alignment: Alignment.centerLeft,
@@ -134,8 +115,8 @@ class _CommentCardState extends State<CommentCard> {
                             color: Colors.grey,
                           ),
                           onPressed: () {
-                            _postServices.deleteComment(widget.postID,
-                                widget.commentID, widget.uploadedBy);
+                            _postServices.deleteComment(widget.commentModel.postID,
+                                widget.commentModel.commentID, widget.commentModel.uploadedBy);
                             Provider.of<PostServices>(context, listen: false)
                                 .notifyListeners();
                             Navigator.pop(context);
@@ -172,7 +153,7 @@ class _CommentCardState extends State<CommentCard> {
               scrollDirection: Axis.vertical,
               padding: const EdgeInsets.all(8.0),
               physics: const ScrollPhysics(),
-              child: BottomProfileModal(uploadedBy: widget.uploadedBy));
+              child: BottomProfileModal(uploadedBy: widget.commentModel.uploadedBy));
         });
   }
 }

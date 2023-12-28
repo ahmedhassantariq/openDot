@@ -4,7 +4,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:reddit_app/models/commentModel.dart';
 import 'package:reddit_app/models/postInfoModel.dart';
+import 'package:reddit_app/models/postModel.dart';
 import 'package:reddit_app/models/userDataModel.dart';
 
 class PostServices extends ChangeNotifier{
@@ -17,12 +19,19 @@ class PostServices extends ChangeNotifier{
     return UserCredentialsModel.fromMap(userCredentials);
   }
 
-
-  Stream<QuerySnapshot<Map<String, dynamic>>> getPostData() {
-    Stream<QuerySnapshot<Map<String, dynamic>>> data = _firestore.collection('posts')
-        .orderBy('uploadedOn', descending: true).get().asStream();
-    return data;
+  Future<PostModel> getSinglePost(String postID) async {
+    DocumentSnapshot<Map<String, dynamic>> singlePost = await _firestore.collection('posts').doc(postID).get();
+    return PostModel.fromMap(singlePost);
   }
+
+
+  Stream<List<PostModel>> getPostData() {
+    Stream<QuerySnapshot> stream = _firestore.collection('posts').orderBy('uploadedOn', descending: true).snapshots();
+    Stream<List<PostModel>> model = stream.map((event) => event.docs.map((e) =>
+        PostModel(postID: e.get("postID"), postTitle: e.get("postTitle"), uploadedBy: e.get("uploadedBy"), postDescription: e.get("postDescription"), uploadedOn: e.get("uploadedOn"), upVotes: e.get("upVotes"), imageUrl: e.get("imageUrl"), downVotes: e.get("downVotes"))).toList());
+    return model;
+  }
+
 
   Stream<QuerySnapshot<Map<String, dynamic>>> getUserPostData(String userID) {
     Stream<QuerySnapshot<Map<String, dynamic>>> data = _firestore.collection('posts')
@@ -30,6 +39,7 @@ class PostServices extends ChangeNotifier{
         .get().asStream();
     return data;
   }
+
 
   Future<void> createPost(String postTitle, String postBody, List<dynamic> imageUrl) async {
     final String currentUserId = _firebaseAuth.currentUser!.uid;
@@ -77,12 +87,13 @@ class PostServices extends ChangeNotifier{
     notifyListeners();
   }
 
-  Stream<QuerySnapshot<Map<String, dynamic>>> getCommentData(String postID) {
-    Stream<QuerySnapshot<Map<String, dynamic>>> data = _firestore.collection(
-        'posts').doc(postID).collection(
-        'comments').orderBy('uploadedOn').get().asStream();
-    return data;
+  Stream<List<CommentModel>> getCommentData(String postID) {
+    Stream<QuerySnapshot> stream = _firestore.collection('posts').doc(postID).collection('comments').orderBy('uploadedOn').get().asStream();
+    Stream<List<CommentModel>> model = stream.map((event) => event.docs.map((e) =>
+        CommentModel(postID: postID, commentID: e.get("commentID"), comment: e.get("comment"), uploadedBy: e.get("uploadedBy"), uploadedOn: e.get("uploadedOn"), upVotes: e.get("upVotes"), downVotes: e.get("downVotes"), currentUser: _firebaseAuth.currentUser)).toList());
+    return model;
   }
+
 
   Future<void> createComment(String postID, String commentBody) async {
     final String currentUserId = _firebaseAuth.currentUser!.uid;
@@ -116,7 +127,7 @@ class PostServices extends ChangeNotifier{
 
   Future<String>uploadImage(String pickedImageName, Uint8List img) async {
     final storageReference = FirebaseStorage.instance.ref(
-        "images/${pickedImageName}");
+        "images/$pickedImageName");
     final TaskSnapshot task = await storageReference.putData(img);
     print(task.totalBytes);
     print(task.bytesTransferred);
@@ -165,10 +176,13 @@ class PostServices extends ChangeNotifier{
   }
 
 
-  Stream<QuerySnapshot> searchComment(String postID,String comment ) {
+  Stream<List<CommentModel>> searchComment(String postID,String comment ) {
     return _firestore
         .collection('posts').doc(postID).collection("comments")
-        .snapshots();
+        .where('comment', isEqualTo: comment)
+        .snapshots().map((event) => event.docs.map((e) =>
+        CommentModel(postID: postID, commentID: e.get("commentID"), comment: e.get("comment"), uploadedBy: e.get("uploadedBy"), uploadedOn: e.get("uploadedOn"), upVotes: e.get("upVotes"), downVotes: e.get("downVotes"), currentUser: _firebaseAuth.currentUser)).toList());
   }
+
 
 }

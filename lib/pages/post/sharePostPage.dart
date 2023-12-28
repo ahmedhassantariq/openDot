@@ -3,24 +3,28 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:reddit_app/models/userDataModel.dart';
-
-
+import 'package:reddit_app/models/inboxNotificationModel.dart';
+import 'package:reddit_app/models/postModel.dart';
 import 'package:reddit_app/services/chat/chat_services.dart';
+import 'package:reddit_app/services/firebase/firebase_services.dart';
 import 'package:reddit_app/services/posts/post_services.dart';
 
-import 'chatRoom.dart';
-
-class CreateNewChat extends StatefulWidget {
-  const CreateNewChat({super.key});
+class SharePost extends StatefulWidget {
+  final PostModel postModel;
+  const SharePost({
+    required this.postModel,
+    super.key
+  });
 
   @override
-  State<CreateNewChat> createState() => _CreateNewChatState();
+  State<SharePost> createState() => _SharePostState();
 }
 
-class _CreateNewChatState extends State<CreateNewChat> {
+class _SharePostState extends State<SharePost> {
   final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _bodyTextController = TextEditingController();
   final ChatServices _firebaseServices = ChatServices();
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final StreamController<Stream<QuerySnapshot>> streamController = StreamController();
@@ -55,15 +59,30 @@ class _CreateNewChatState extends State<CreateNewChat> {
                 ),
               ),
               TextField(
-                controller: _searchController,
-                decoration: InputDecoration(
-                  prefixIcon: IconButton(onPressed: (){_searchController.clear();},icon: const Icon(Icons.search_off_outlined),),
-                    suffixIcon: IconButton(onPressed: (){
-                      if(userList.isNotEmpty) {
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                      prefixIcon: IconButton(onPressed: (){_searchController.clear();},icon: const Icon(Icons.search_off_outlined),),
+                      suffixIcon: IconButton(onPressed: (){
+                        if(userList.isNotEmpty && _bodyTextController.text.isNotEmpty) {
+                          Navigator.pop(context);
+                          FirebaseServices().sendInboxNotification(
+                              userList,
+                              InboxNotificationModel(notificationID: widget.postModel.postID, from: _firebaseAuth.currentUser!.uid, title: widget.postModel.postTitle, body: _bodyTextController.text, createdOn: Timestamp.now())
+                          );
+                        }
+                      }, icon: const Icon(CupertinoIcons.share_solid)),
+                    hintText: "Search by Username"
+                  ),
+                cursorColor: Colors.grey,
+              ),
+              const SizedBox(height: 8.0),
+              TextField(
+                  controller: _bodyTextController,
+                  decoration: InputDecoration(
+                      prefixIcon: IconButton(onPressed: (){_bodyTextController.clear();},icon: const Icon(Icons.search_off_outlined)),
+                      hintText: "Body"
+                  ),
 
-                      }
-                    }, icon: const Icon(Icons.send))
-                )
               ),
               _buildUserList(),
               for(int i =0; i<userList.length; i++)
@@ -112,32 +131,27 @@ class _CreateNewChatState extends State<CreateNewChat> {
         return ListView(
           shrinkWrap: true,
           children: snapshot.data!.docs
-              .map<Widget>((doc) => _buildUserListItem(doc))
-              .toList(),
+              .map<Widget>((doc) => _buildUserListItem(doc)).toList(),
         );
       },
     );
   }
 
   Widget _buildUserListItem(DocumentSnapshot document) {
-
-    UserCredentialsModel model = UserCredentialsModel.fromMap(document as DocumentSnapshot<Map<String, dynamic>>);
+    if(userList.any((element) => element == document['uid']) || document['uid'] == _firebaseAuth.currentUser!.uid){
+      return const SizedBox();
+    }
     return ListTile(
-        leading: CircleAvatar(
+      leading: CircleAvatar(
           backgroundColor: Colors.transparent,
-            backgroundImage: NetworkImage("${document['photoUrl']}")),
-        title: Text(document['userName']),
-        onTap: () {
-          if(userList.any((element) => element == document['uid']) || document['uid'] == _firebaseAuth.currentUser!.uid){
-          } else {
-            setState(() {
-              userList.add(document['uid']);
-              Navigator.pop(context);
-              Navigator.push(context, MaterialPageRoute(builder: (context) => ChatRoom(receiver: model,)));
-            });
-          }
-        },
-      );
+          backgroundImage: NetworkImage("${document['photoUrl']}")),
+      title: Text(document['userName']),
+      onTap: () {
+          setState(() {
+            userList.add(document['uid']);
+          });
+      },
+    );
 
   }
 }

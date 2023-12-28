@@ -54,6 +54,8 @@ dependencies:
   shimmer_container: ^0.0.2
   flutter_webrtc: ^0.9.47
   app_settings: ^5.1.1
+  awesome_notifications: ^0.8.3
+  shared_preferences: ^2.2.2
 
 dev_dependencies:
   flutter_test:

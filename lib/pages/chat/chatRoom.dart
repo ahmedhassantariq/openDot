@@ -1,22 +1,19 @@
-import 'dart:convert';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:intl/intl.dart';
 import 'package:reddit_app/components/messageTextField.dart';
-import 'package:reddit_app/pages/chat/videoCall/videoCallReceive.dart';
+import 'package:reddit_app/models/notificationsModel.dart';
+import 'package:reddit_app/models/userDataModel.dart';
 import 'package:reddit_app/pages/chat/videoCall/videoCallSend.dart';
 import 'package:reddit_app/services/chat/chat_services.dart';
 import 'package:reddit_app/services/notifications/notification_services.dart';
-import 'package:reddit_app/services/posts/post_services.dart';
-import 'package:http/http.dart' as http;
 
 class ChatRoom extends StatefulWidget {
-  final String receiverID;
+  final UserCredentialsModel receiver;
   const ChatRoom({
-    required this.receiverID,
+    required this.receiver,
     super.key});
 
   @override
@@ -45,7 +42,18 @@ class _ChatRoomState extends State<ChatRoom> {
 
   submitMessage(){
     if(_messageEditingController.text.isNotEmpty) {
-      _chatServices.sendMessage(widget.receiverID, _messageEditingController.text, 'text').then((value) => _scrollDown());
+      notificationServices.sendNotification(
+          NotificationsModel(
+              to: widget.receiver.uid,
+              priority: 'high',
+              title: 'Message',
+              body: _messageEditingController.text,
+              type: 'chat',
+              id: '1',
+              payload: '0'
+          )
+      );
+      _chatServices.sendMessage(widget.receiver.uid, _messageEditingController.text, 'text').then((value) => _scrollDown());
       _messageEditingController.clear();
     }
   }
@@ -55,53 +63,17 @@ class _ChatRoomState extends State<ChatRoom> {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(icon:const Icon(Icons.arrow_back, color: Colors.black,), onPressed: () {Navigator.pop(context);},),
-        title: FutureBuilder(
-          future: PostServices().getUser(widget.receiverID),
-          builder: (context,snapshot) {
-            if(snapshot.hasError){
-              return const Text("Error Loading Info");
-            }
-            if(snapshot.connectionState == ConnectionState.waiting){
-              return const SizedBox(height: 0, width: 0);
-            }
-            return Row(
+        title: Row(
               children: [
                 CircleAvatar(
                   backgroundColor: Colors.transparent,
-                    backgroundImage: NetworkImage(snapshot.data!.imageUrl)),
+                    backgroundImage: NetworkImage(widget.receiver.imageUrl)),
                 const SizedBox(width: 8.0),
-                Text(snapshot.data!.userName,style: const TextStyle(color: Colors.black)),
+                Text(widget.receiver.userName,style: const TextStyle(color: Colors.black)),
               ],
-            );
-          },
-
-        ),
+            ),
         actions: [
-          IconButton(onPressed: (){
-            notificationServices.getDeviceToken().then((value)async {
-              print(value.toString());
-              var data = {
-                'to' : value.toString(),
-                'priority': 'high',
-                'notification': {
-                  'title':'Ahmed',
-                  'body':'Hello',
-                },
-                'data' : {
-                  'type': 'chat',
-                  'id': '1'
-                }
-              };
-              await http.post(Uri.parse("https://fcm.googleapis.com/fcm/send"),
-              body: jsonEncode(data),
-                headers: {
-                'Content-Type' : 'application/json',
-                  'Authorization' :'Key=AAAAX29LRcw:APA91bHMZGtk79tLwypFQmtKdaiwB2wHz-V7CDpO5lkbnzX1Zgnuc05gHBXGuA3267PKvx-2eFRdoIRcTj9kMEA6hzH8_yTeTPMyED8H376K0fOmO0pQy7VEK2Us1RM_CzNbXcmNXunl'
-                }
-              );
-            });
-          }, icon: Icon(Icons.notifications, color: Colors.black,)),
-          IconButton(onPressed: (){Navigator.push(context, MaterialPageRoute(builder: (context)=>VideoCallSend(receiverID: widget.receiverID)));}, icon: const Icon(Icons.video_call, color: Colors.black,)),
+          IconButton(onPressed: (){Navigator.push(context, MaterialPageRoute(builder: (context)=>VideoCallSend(receiver: widget.receiver)));}, icon: const Icon(Icons.video_call, color: Colors.black,)),
         ],
         centerTitle: true,
         backgroundColor: Colors.white,
@@ -131,7 +103,7 @@ class _ChatRoomState extends State<ChatRoom> {
 
   Widget _buildMessageList(){
     return StreamBuilder(
-        stream: _chatServices.getChatRoomMessages(widget.receiverID),
+        stream: _chatServices.getChatRoomMessages(widget.receiver.uid),
         builder: (context, snapshots) {
       if(snapshots.hasError) {
         return const Text("Has Error");
@@ -178,7 +150,7 @@ class _ChatRoomState extends State<ChatRoom> {
         Text(time.format(timestamp.toDate()), style: const TextStyle(fontWeight: FontWeight.w600),),
           data['messageType']=='call' ?
           GestureDetector(
-            onTap: (){Navigator.push(context, MaterialPageRoute(builder: (context)=>VideoCallReceive(roomID: data['message'])));},
+            onTap: (){},
             child: Container(
               padding: const EdgeInsets.all(12.0),
               decoration: BoxDecoration(
@@ -229,7 +201,7 @@ class _ChatRoomState extends State<ChatRoom> {
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 8.0),
             child: TextButton.icon(onPressed: (){
-                  _chatServices.deleteMessage(widget.receiverID, documentID);
+                  _chatServices.deleteMessage(widget.receiver.uid, documentID);
                   Navigator.pop(context);
                   }, icon: const Icon(Icons.delete), label: const Text("Delete Comment")),
           );
@@ -257,7 +229,7 @@ class _ChatRoomState extends State<ChatRoom> {
 
     submitComment(){
     if(_commentEditingController.text.isNotEmpty) {
-      _chatServices.editMessage(widget.receiverID, documentID, _commentEditingController.text);
+      _chatServices.editMessage(widget.receiver.uid, documentID, _commentEditingController.text);
       Navigator.pop(context);
       _commentEditingController.clear();
     }

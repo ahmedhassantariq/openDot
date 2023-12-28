@@ -9,6 +9,7 @@ class UserCredentialsModel {
   final bool emailVerified;
   final bool isAnonymous;
   final String imageUrl;
+  final String fcmToken;
   final Timestamp lastLogin;
 
   const UserCredentialsModel({
@@ -17,6 +18,7 @@ class UserCredentialsModel {
     required this.userName,
     required this.email,
     required this.phoneNumber,
+    required this.fcmToken,
     required this.emailVerified,
     required this.isAnonymous,
     required this.imageUrl,
@@ -30,6 +32,7 @@ class UserCredentialsModel {
         emailVerified: documentSnapshot.get('emailVerified'),
         isAnonymous: documentSnapshot.get('isAnonymous'),
         lastLogin: documentSnapshot.get('lastLogin'),
+        fcmToken: documentSnapshot.get('fcmToken'),
         phoneNumber: documentSnapshot.get('phoneNumber'),
         imageUrl: documentSnapshot.get('photoUrl'),
         uid: documentSnapshot.get('uid'),
