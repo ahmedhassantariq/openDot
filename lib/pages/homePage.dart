@@ -115,8 +115,8 @@ class _HomePageState extends State<HomePage> {
 
 
   PreferredSizeWidget _appBar() {
-
     List<Widget> list = [
+      const SizedBox(height: 0,width: 0,),
       const SizedBox(height: 0,width: 0,),
       const SizedBox(height: 0,width: 0,),
       IconButton(padding: const EdgeInsets.symmetric(horizontal: 18.0),onPressed: (){showNewChatMenu();}, icon: const Icon(Icons.chat)),

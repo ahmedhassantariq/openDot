@@ -46,10 +46,11 @@ class MyApp extends StatelessWidget {
           ChangeNotifierProvider<PostServices>(create: (context)=>PostServices()),
           ChangeNotifierProvider<ChatServices>(create: (context)=>ChatServices()),
     ],
-      child: const MaterialApp(
+      child: MaterialApp(
       debugShowCheckedModeBanner: false,
+      scrollBehavior: const ScrollBehavior().copyWith(scrollbars: false),
       title: 'Open Dot',
-      home: AuthGate(),
+      home: const AuthGate(),
     ));
   }
 }
