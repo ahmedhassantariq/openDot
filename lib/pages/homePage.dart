@@ -7,8 +7,6 @@ import 'package:reddit_app/pages/drawer/endDrawer.dart';
 import 'package:reddit_app/pages/scrollView.dart';
 import 'package:reddit_app/services/notifications/notification_services.dart';
 import 'package:reddit_app/services/posts/post_services.dart';
-import 'package:reddit_app/services/profile/profile_services.dart';
-
 import '../services/firebase/firebase_services.dart';
 import 'chat/chatPage.dart';
 import 'chat/createNewChat.dart';

@@ -1,12 +1,8 @@
 import 'dart:async';
-
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:reddit_app/models/postModel.dart';
 import 'package:reddit_app/pages/post/postCard.dart';
-import 'package:reddit_app/services/firebase/firebase_services.dart';
 import 'package:reddit_app/services/posts/post_services.dart';
 class ScrollViewPage extends StatefulWidget {
   const ScrollViewPage({
@@ -57,7 +53,7 @@ class _ScrollViewPageState extends State<ScrollViewPage> {
           );
         }
         if (snapshot.hasError) {
-          return const Text('Error');
+          return const Center(child: Text('Error'));
         } else {
           return const LinearProgressIndicator();
         }

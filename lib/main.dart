@@ -15,10 +15,6 @@ import 'services/firebase/firebase_options.dart';
 
 // -d chrome --web-renderer html
 
-
-
-
-
 void main() async{
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
