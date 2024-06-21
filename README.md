@@ -1,16 +1,10 @@
-# reddit_app
+# Open Dot - Social Media Application
 
-A new Flutter project.
+A project made as hobby to post, chat, and call.
 
-## Getting Started
+## Flutter & Firebase
 
-This project is a starting point for a Flutter application.
+![alt text](https://github.com/ahmedhassantariq/openDot/blob/master/lib/components/image1.jpg)
+![alt text](https://github.com/ahmedhassantariq/openDot/blob/master/lib/components/image2.jpg)
+![alt text](https://github.com/ahmedhassantariq/openDot/blob/master/lib/components/image3.jpg)
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
